@@ -35,7 +35,7 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
   }
-  
+
   @override
   void dispose() {
     mapController.dispose();
@@ -45,6 +45,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Parking App'),
+      ),
       body: GoogleMap(
         myLocationButtonEnabled: true,
         myLocationEnabled: true,
@@ -53,6 +56,13 @@ class _MapScreenState extends State<MapScreen> {
           target: _initialCameraPosition,
           zoom: 11.0,
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          Navigator.of(context).pushNamed('/parking_screen');
+        },
       ),
     );
   }
