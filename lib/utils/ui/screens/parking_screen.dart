@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:parking_app/src/models/parking_spot.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 
 class ParkingScreen extends StatefulWidget {
@@ -11,6 +13,30 @@ class _ParkingScreenState extends State<ParkingScreen> {
   TextEditingController _latitudeController = TextEditingController();
   TextEditingController _parkingName = TextEditingController();
   TextEditingController _parkingDescription = TextEditingController();
+  double _rating = 0;
+
+  Future<void> _showWarningDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Warning'),
+          content: Text('Input latitude and longitude before creating a parking spot'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Understood'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
   @override
   void dispose() {
@@ -49,20 +75,49 @@ class _ParkingScreenState extends State<ParkingScreen> {
           Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: _longitudeController,
+                child: TextFormField(
+                  autovalidateMode: AutovalidateMode.always,
+                  controller: _latitudeController,
+                  validator: (value) {
+                    if(value.isNotEmpty){
+                      double validatorValue = double.parse(value);
+                      if (validatorValue<-90 || validatorValue > 90){
+                        return 'Please enter valid latitude';
+                      }
+                    }
+                    return null;
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'(^-?\d*\.?\d*)'))
+                  ],
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                      labelText: 'Longitude',
+                      labelText: 'Latitude',
                       border: OutlineInputBorder()
                   ),
                 ),
               ),
               SizedBox(width: 10),
               Expanded(
-                child: TextField(
-                  controller: _latitudeController,
+                child:
+                TextFormField(
+                  autovalidateMode: AutovalidateMode.always,
+                  controller: _longitudeController,
+                  validator: (value) {
+                    if(value.isNotEmpty){
+                      double validatorValue = double.parse(value);
+                      if (validatorValue<-180 || validatorValue > 180){
+                        return 'Please enter valid latitude';
+                      }
+                    }
+                    return null;
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'(^-?\d*\.?\d*)'))
+                  ],
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                      labelText: 'Latitude',
+                      labelText: 'Longitude',
                       border: OutlineInputBorder()
                   ),
                 ),
@@ -75,7 +130,7 @@ class _ParkingScreenState extends State<ParkingScreen> {
               size: 50.0,
               //allowHalfRating: false,
               onRated: (value) {
-
+                _rating = value;
               },
             ),
           ),
@@ -86,12 +141,28 @@ class _ParkingScreenState extends State<ParkingScreen> {
               width: 150,
               height: 40,
               child: ElevatedButton(
-                  onPressed: () {
+                onPressed: () {
+                  //all fields except for lat and long can be empty for the definition of the parking spot
+                  if(_latitudeController.text.isNotEmpty && _longitudeController.text.isNotEmpty){
+                    double _latitude = double.parse(_latitudeController.text);
+                    double _longitude = double.parse(_longitudeController.text);
 
-                  },
-                  child: Text(
+                    ParkingSpot newParkingSpot = ParkingSpot(
+                        name: _parkingName.text,
+                        description: _parkingDescription.text,
+                        latitude: _latitude,
+                        longitude: _longitude,
+                        rating: _rating);
+                    parkingSpotsList.add(newParkingSpot);
+                    Navigator.pop(context);
+                  }
+                  else {
+                    _showWarningDialog();
+                  }
+                },
+                child: Text(
                     'Save the spot'
-                  ),
+                ),
               ),
             ),
           )

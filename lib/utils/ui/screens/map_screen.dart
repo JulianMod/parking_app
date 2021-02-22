@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:parking_app/src/models/parking_spot.dart';
 import 'package:parking_app/utils/services/location.dart';
 
 
@@ -9,6 +10,8 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+
+  ParkingSpot parkingSpot = ParkingSpot();
 
   //this could be last location saved
   final LatLng _initialCameraPosition = LatLng(45.521563, -122.677433);
@@ -56,12 +59,18 @@ class _MapScreenState extends State<MapScreen> {
           target: _initialCameraPosition,
           zoom: 11.0,
         ),
+        markers: parkingSpot.getParkingMarkers(),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.of(context).pushNamed('/parking_screen');
+          Navigator.of(context).pushNamed('/parking_screen').then((value)
+          {
+            setState(() {
+
+            });
+          });
         },
       ),
     );
