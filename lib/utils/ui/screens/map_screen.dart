@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:parking_app/src/models/parking_spot.dart';
@@ -51,15 +52,38 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: Text('Parking App'),
       ),
-      body: GoogleMap(
-        myLocationButtonEnabled: true,
-        myLocationEnabled: true,
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: _initialCameraPosition,
-          zoom: 11.0,
-        ),
-        markers: parkingSpot.getParkingMarkers(),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('parkingSpots').snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData){
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          var firebaseData = snapshot.data.docs;
+
+          for(int i = 0; i < firebaseData.length; i++) {
+            var _newParkingSpot = ParkingSpot(
+                name: firebaseData[i]['name'],
+                description: firebaseData[i]['description'],
+                latitude: firebaseData[i]['latitude'],
+                longitude: firebaseData[i]['longitude'],
+                rating: firebaseData[i]['rating']
+            );
+            parkingSpotsList.add(_newParkingSpot);
+          }
+
+          return GoogleMap(
+            myLocationButtonEnabled: true,
+            myLocationEnabled: true,
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _initialCameraPosition,
+              zoom: 11.0,
+            ),
+            markers: parkingSpot.getParkingMarkers(),
+          );
+        }
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton(

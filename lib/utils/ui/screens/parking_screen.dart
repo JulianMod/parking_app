@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:parking_app/src/models/parking_spot.dart';
@@ -147,13 +148,24 @@ class _ParkingScreenState extends State<ParkingScreen> {
                     double _latitude = double.parse(_latitudeController.text);
                     double _longitude = double.parse(_longitudeController.text);
 
-                    ParkingSpot newParkingSpot = ParkingSpot(
+                    /*ParkingSpot newParkingSpot = ParkingSpot(
                         name: _parkingName.text,
                         description: _parkingDescription.text,
                         latitude: _latitude,
                         longitude: _longitude,
                         rating: _rating);
-                    parkingSpotsList.add(newParkingSpot);
+                    parkingSpotsList.add(newParkingSpot);*/
+
+                    FirebaseFirestore.instance.
+                    collection('parkingSpots')
+                        .add({
+                      'name': _parkingName.text,
+                      'description': _parkingDescription.text,
+                      'latitude': _latitude,
+                      'longitude': _longitude,
+                      'rating': _rating
+                    });
+
                     Navigator.pop(context);
                   }
                   else {

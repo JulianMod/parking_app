@@ -32,6 +32,8 @@ dependencies:
   geolocator: ^6.2.0
   smooth_star_rating: ^1.1.1
   uuid: ^2.2.2
+  firebase_core: ^0.7.0
+  cloud_firestore: ^0.16.0+1
 
 
 dev_dependencies:
