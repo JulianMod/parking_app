@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:parking_app/src/bloc/parking_spots_bloc.dart';
 import 'package:parking_app/src/models/parking_spot.dart';
+import 'package:parking_app/src/resources/firebase_database.dart';
 import 'package:parking_app/utils/services/location.dart';
-
 
 class MapScreen extends StatefulWidget {
   @override
@@ -37,6 +38,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void initState() {
+    FirebaseProvider().getParkingSpots();
     super.initState();
   }
 
@@ -53,26 +55,14 @@ class _MapScreenState extends State<MapScreen> {
         title: Text('Parking App'),
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('parkingSpots').snapshots(),
+        stream: bloc.getStream,
+        initialData: bloc.parkingSpotsList,
         builder: (context, snapshot) {
           if (!snapshot.hasData){
             return Center(
               child: CircularProgressIndicator(),
             );
           }
-          var firebaseData = snapshot.data.docs;
-
-          for(int i = 0; i < firebaseData.length; i++) {
-            var _newParkingSpot = ParkingSpot(
-                name: firebaseData[i]['name'],
-                description: firebaseData[i]['description'],
-                latitude: firebaseData[i]['latitude'],
-                longitude: firebaseData[i]['longitude'],
-                rating: firebaseData[i]['rating']
-            );
-            parkingSpotsList.add(_newParkingSpot);
-          }
-
           return GoogleMap(
             myLocationButtonEnabled: true,
             myLocationEnabled: true,
@@ -81,7 +71,7 @@ class _MapScreenState extends State<MapScreen> {
               target: _initialCameraPosition,
               zoom: 11.0,
             ),
-            markers: parkingSpot.getParkingMarkers(),
+            markers: parkingSpot.getParkingMarkers(snapshot.data),
           );
         }
       ),
@@ -89,12 +79,7 @@ class _MapScreenState extends State<MapScreen> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.of(context).pushNamed('/parking_screen').then((value)
-          {
-            setState(() {
-
-            });
-          });
+          Navigator.of(context).pushNamed('/parking_screen');
         },
       ),
     );
