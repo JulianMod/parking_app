@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:parking_app/src/bloc/parking_spots_bloc.dart';
+import 'package:parking_app/src/models/parking_spot.dart';
+import 'package:parking_app/src/resources/firebase_database.dart';
 import 'package:parking_app/utils/services/location.dart';
-
 
 class MapScreen extends StatefulWidget {
   @override
@@ -9,6 +12,8 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+
+  ParkingSpot parkingSpot = ParkingSpot();
 
   //this could be last location saved
   final LatLng _initialCameraPosition = LatLng(45.521563, -122.677433);
@@ -33,6 +38,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void initState() {
+    FirebaseProvider().getParkingSpots();
     super.initState();
   }
 
@@ -48,14 +54,26 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: Text('Parking App'),
       ),
-      body: GoogleMap(
-        myLocationButtonEnabled: true,
-        myLocationEnabled: true,
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: _initialCameraPosition,
-          zoom: 11.0,
-        ),
+      body: StreamBuilder(
+        stream: bloc.getStream,
+        initialData: bloc.parkingSpotsList,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData){
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          return GoogleMap(
+            myLocationButtonEnabled: true,
+            myLocationEnabled: true,
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _initialCameraPosition,
+              zoom: 11.0,
+            ),
+            markers: parkingSpot.getParkingMarkers(snapshot.data),
+          );
+        }
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton(
