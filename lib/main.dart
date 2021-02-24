@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:parking_app/src/app.dart';
 
 Future<void> main() async {
+  //Initialize Firebase access when the application is started
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(ParkingApp());
