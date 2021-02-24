@@ -1,25 +1,49 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:parking_app/src/models/parking_spot.dart';
 import 'package:parking_app/src/resources/firebase_database.dart';
 import 'package:parking_app/utils/helpers/constants.dart';
 import 'package:parking_app/utils/helpers/parser.dart';
+import 'package:parking_app/utils/ui/components/warning_dialog.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 
+///screen receiving the data for the parking spot
 class ParkingScreen extends StatefulWidget {
   @override
   _ParkingScreenState createState() => _ParkingScreenState();
 }
 
 class _ParkingScreenState extends State<ParkingScreen> {
+
+  //definition of text controllers to receive input data
   TextEditingController _longitudeController = TextEditingController();
   TextEditingController _latitudeController = TextEditingController();
   TextEditingController _parkingName = TextEditingController();
   TextEditingController _parkingDescription = TextEditingController();
+  //rating intial value
   double _rating = 0;
+  //definition of strings for widgets
+  final String _labelName = 'Parking name';
+  final String _labelDescription = 'Parking description';
+  final String _labelLatitude = 'Latitude';
+  final String _labelLongitude = 'Longitude';
+  final String _saveButton = 'Save the spot';
+  //text formatter for lang & lat input fields, only allow digits and .
+  final List<TextInputFormatter> kCoordinateFormat = [
+    FilteringTextInputFormatter.allow(
+        RegExp(r'(^-?\d*\.?\d*)'))
+  ];
+  //keyboard type for lang & lat field allowing the input of the numbers
+  final TextInputType _kCoordinateKeyboard = TextInputType.numberWithOptions(decimal: true);
+  //sizing values for clear interface
+  final double _kParkingScreenVerticalSpacer = 15.0;
+  final double _kRatingSize = 50.0;
+  final double _kParkingScreenBottomSpacer = 40.0;
+  final double _kParkingScreenSaveButtonWidth = 150.0;
+  final double _kParkingScreenSaveButtonHeight = 40.0;
 
-  String validateLatitude(String value) {
+  //validator methods for lat & long fields
+  String _validateLatitude(String value) {
     if (value.isNotEmpty) {
       double validatorValue = stringToDouble(value);
       if (validatorValue < -90 || validatorValue > 90) {
@@ -28,8 +52,7 @@ class _ParkingScreenState extends State<ParkingScreen> {
     }
     return null;
   }
-
-  String validateLongitude(String value){
+  String _validateLongitude(String value){
     if (value.isNotEmpty) {
       double validatorValue = stringToDouble(value);
       if (validatorValue < -180 || validatorValue > 180) {
@@ -39,28 +62,7 @@ class _ParkingScreenState extends State<ParkingScreen> {
     return null;
   }
 
-  Future<void> _showWarningDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Warning'),
-          content: Text(
-              'Input latitude and longitude before creating a parking spot'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Understood'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
+  //method to send input parking details to database as ParkingSpot class
   void _sendDataToFirebase() {
     //all fields except for lat and long can be empty for the definition of the parking spot
     if (_latitudeController.text.isNotEmpty && _longitudeController.text.isNotEmpty) {
@@ -77,10 +79,11 @@ class _ParkingScreenState extends State<ParkingScreen> {
       Navigator.pop(context);
     }
     else {
-      _showWarningDialog();
+      showWarningDialog(context);
     }
   }
 
+  //disposal of controllers
   @override
   void dispose() {
     _longitudeController.dispose();
@@ -94,82 +97,86 @@ class _ParkingScreenState extends State<ParkingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Parking App'),
+        title: Text(kAppName),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(kParkingScreenPadding),
+        padding: const EdgeInsets.all(kPadding),
         children: [
+          //input for parking name
           TextField(
             controller: _parkingName,
             decoration: InputDecoration(
-                labelText: 'Parking name',
+                labelText: _labelName,
                 border: OutlineInputBorder()
             ),
           ),
-          SizedBox(height: kParkingScreenVerticalSpacer),
+          SizedBox(height: _kParkingScreenVerticalSpacer),
+          //input for parking description
           TextField(
             controller: _parkingDescription,
             decoration: InputDecoration(
-                labelText: 'Parking description',
+                labelText: _labelDescription,
                 border: OutlineInputBorder()
             ),
           ),
-          SizedBox(height: kParkingScreenVerticalSpacer),
+          SizedBox(height: _kParkingScreenVerticalSpacer),
           Row(
             children: [
               Expanded(
+                //input for parking latitude coordinate
                 child: TextFormField(
                   autovalidateMode: AutovalidateMode.always,
                   controller: _latitudeController,
-                  validator: validateLatitude,
+                  validator: _validateLatitude,
                   inputFormatters: kCoordinateFormat,
-                  keyboardType: kCoordinateKeyboard,
+                  keyboardType: _kCoordinateKeyboard,
                   decoration: InputDecoration(
-                      labelText: 'Latitude',
+                      labelText: _labelLatitude,
                       border: OutlineInputBorder()
                   ),
                 ),
               ),
-              SizedBox(width: kParkingScreenHorizontalSpacer),
+              SizedBox(width: kHorizontalSpacer),
               Expanded(
                 child:
+                //input for parking longitude coordinate
                 TextFormField(
                   autovalidateMode: AutovalidateMode.always,
                   controller: _longitudeController,
-                  validator: validateLongitude,
+                  validator: _validateLongitude,
                   inputFormatters: kCoordinateFormat,
-                  keyboardType: kCoordinateKeyboard,
+                  keyboardType: _kCoordinateKeyboard,
                   decoration: InputDecoration(
-                      labelText: 'Longitude',
+                      labelText: _labelLongitude,
                       border: OutlineInputBorder()
                   ),
                 ),
               )
             ],
           ),
-          SizedBox(height: kParkingScreenVerticalSpacer),
+          SizedBox(height: _kParkingScreenVerticalSpacer),
           Center(
+            //input for parking rating
             child: SmoothStarRating(
-              size: kRatingSize,
+              size: _kRatingSize,
               //allowHalfRating: false,
               onRated: (value) {
                 _rating = value;
               },
             ),
           ),
-          SizedBox(height: kParkingScreenBottomSpacer),
+          SizedBox(height: _kParkingScreenBottomSpacer),
+          //save button, align allows to center button in ListView
           Align(
             alignment: Alignment.bottomCenter,
             child: SizedBox(
-              width: kParkingScreenSaveButtonWidth,
-              height: kParkingScreenSaveButtonHeight,
+              width: _kParkingScreenSaveButtonWidth,
+              height: _kParkingScreenSaveButtonHeight,
               child: ElevatedButton(
                 onPressed: () {
                   _sendDataToFirebase();
                 },
-                child: Text(
-                    'Save the spot'
-                ),
+                child: Text(_saveButton),
               ),
             ),
           )
